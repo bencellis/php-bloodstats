@@ -1,8 +1,7 @@
 @CHARSET "UTF-8";
 
-/* Move down content because we have a fixed navbar that is 50px tall */
+/* Show it is fixed to the top */
 body {
-  padding-top: 50px;
-  padding-bottom: 20px;
+  min-height: 75rem;
+  padding-top: 4.5rem;
 }
-
