@@ -14,39 +14,22 @@ $statistics = get_blood_stats($page, $perpage, $filter);
  * $alcohol = true | false
  *
  */
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats">Lisinopril vs BP</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats-al">Lisinopril vs BP vs Alcohol</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3">Lisinopril vs BP (3 AVG)</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3-al">Lisinopril vs BP (3 AVG) vs Alcohol</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp2">Lisinopril vs BP (2 AVG)</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3-al">Lisinopril vs BP (2 AVG) vs Alcohol</a>
+// <a class="dropdown-item" href="/bloodstats/metamorfin.php?scope=bsstats">Metamorfin vs BS</a>
+// <a class="dropdown-item" href="/bloodstats/metamorfin.php?scope=bsstats-al">Metamorfin vs BS vs Alcohol</a>
 $alcohol = false;
-$bpstats = null;
+$bsstats = null;
 switch($_REQUEST['scope']) {
-    case 'bpstats' :
-        $bpstats = true;
+    case 'bsstats' :
+        $bsstats = true;
         break;
     case 'bsstats-al' :
-        $bpstats = true;
-        $alcohol = true;
-        break;
-    case 'bp3' :
-        $bpstats = 'bp3';
-        break;
-    case 'bp3-al' :
-        $bpstats = 'bp3';
-        $alcohol = true;
-        break;
-    case 'bp2' :
-        $bpstats = 'bp2';
-        break;
-    case 'bp2-al' :
-        $bpstats = 'bp2';
+        $bsstats = true;
         $alcohol = true;
         break;
 }
-$activemedication = 'Lisinopril';
-$graphimage = get_stats_graph($statistics, 'medication', false, $bpstats, $activemedication, $alcohol);
+
+$activemedication = 'Metamorfin';
+$graphimage = get_stats_graph($statistics, 'medication', $bsstats, false, $activemedication, $alcohol);
 
 ?>
     <div class="container-fluid">

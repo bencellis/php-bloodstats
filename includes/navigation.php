@@ -6,18 +6,55 @@
     	<div class="collapse navbar-collapse" id="navbarCollapse">
     		<ul class="navbar-nav mr-auto">
     			<li class="nav-item active">
-    				<a class="nav-link" href="/index.php">Home <span class="sr-only">(current)</span></a>
+    				<a class="nav-link" href="/bloodstats/index.php">Home <span class="sr-only">(current)</span></a>
+    			</li>
+            	<li class="nav-item dropdown">
+            		<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            		BS vs BP
+            		</a>
+            		<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                		<a class="dropdown-item" href="/bloodstats/bs_vs_bp.php?scope=bpstats">BS vs BP</a>
+                		<a class="dropdown-item" href="/bloodstats/bs_vs_bp.php?scope=bp3">BS vs BP (3 AVG)</a>
+                		<a class="dropdown-item" href="/bloodstats/bs_vs_bp.php?scope=bp2">BS vs BP (2 AVG)</a>
+					</div>
+    			</li>
+            	<li class="nav-item dropdown">
+            		<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            		Lisinopril Stats
+            		</a>
+            		<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                		<a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats">Lisinopril vs BP</a>
+                		<a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats-al">Lisinopril vs BP vs Alcohol</a>
+                		<a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3">Lisinopril vs BP (3 AVG)</a>
+                		<a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3-al">Lisinopril vs BP (3 AVG) vs Alcohol</a>
+                		<a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp2">Lisinopril vs BP (2 AVG)</a>
+                		<a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp2-al">Lisinopril vs BP (2 AVG) vs Alcohol</a>
+					</div>
+    			</li>
+            	<li class="nav-item dropdown">
+            		<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            		Metamorfin Stats
+            		</a>
+            		<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                		<a class="dropdown-item" href="/bloodstats/metamorfin.php?scope=bsstats">Metamorfin vs BS</a>
+                		<a class="dropdown-item" href="/bloodstats/metamorfin.php?scope=bsstats-al">Metamorfin vs BS vs Alcohol</a>
+					</div>
     			</li>
     			<li class="nav-item">
-    				<a class="nav-link" href="lisinopril.php">Lisinopril Stats</a>
+    				<a class="nav-link" href=""></a>
     			</li>
-    			<li class="nav-item">
-    				<a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Metamorfin Stats</a>
-    			</li>
+            	<li class="nav-item dropdown">
+            		<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            		Alcohol
+            		</a>
+            		<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                		<a class="dropdown-item" href="/bloodstats/alcohol.php?scope=bsstats">Alcohol vs BS</a>
+                		<div class="dropdown-divider"></div>
+                		<a class="dropdown-item" href="/bloodstats/alcohol.php?scope=bpstats">Alcohol vs BP</a>
+                		<a class="dropdown-item" href="/bloodstats/alcohol.php?scope=bp3">Alcohol vs BP (3 Avg)</a>
+                		<a class="dropdown-item" href="/bloodstats/alcohol.php?scope=bp2">Alcohol vs BP (2 Avg)</a>
+            		</div>
+            	</li>
     		</ul>
-    		<form class="form-inline mt-2 mt-md-0">
-    		<input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-    		<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-    		</form>
     	</div>
     </nav>

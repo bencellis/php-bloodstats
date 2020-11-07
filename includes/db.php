@@ -50,38 +50,58 @@ class dbfunctions {
     }
 
     public function clear_statistics() {
-        foreach (array('bloods', 'alcohol', 'medication') as $table) {
+        foreach (array('bloodbs', 'bloodbp', 'alcohol', 'medication') as $table) {
             $sql = "TRUNCATE $table";
             $this->mysqli->query($sql);
         }
 
     }
 
-    public function get_blood_stats($interval = 30) {
-        $earliestdate = 0;
-        $statistics = array();
+    public function get_blood_stats($page = 1, $perpage = 42, $filter = null) {
 
-        $sqlbloods = "SELECT recid, thedate, bstime, bsreading, bptime, BP3avg, BP2avg,
+        $earliestdate = 0;
+
+        $statistics = array();
+        $lowerlimit = $page - 1;
+        $higherlimit = $page * $perpage;
+
+        $sqlbs = "SELECT recid, thedate, bstime, bsreading,
                 DATE_SUB(thedate, INTERVAL 1 DAY) as effectivedate,
                 UNIX_TIMESTAMP(DATE_SUB(thedate, INTERVAL 1 DAY)) AS unixeffdate,
-                UNIX_TIMESTAMP(DATE_SUB(thedate, INTERVAL 1 DAY)) AS unixdate,
-                UNIX_TIMESTAMP(CONCAT(thedate, ' ', bptime)) AS bptimestamp,
+                UNIX_TIMESTAMP(thedate) AS unixdate,
                 UNIX_TIMESTAMP(CONCAT(thedate, ' ', bstime)) AS bstimestamp
-            FROM bloods WHERE thedate > (SELECT DATE_SUB(MAX(thedate), INTERVAL $interval DAY) FROM `bloods`)
-            ORDER BY thedate DESC, bstime ASC";
+                FROM bloodbs
+                WHERE bsreading > 0
+                ORDER BY thedate DESC, bstime ASC
+                LIMIT $lowerlimit, $higherlimit";
 
-        $bloodrecords = $this->mysqli->query($sqlbloods);
+        $bloodrecords = $this->mysqli->query($sqlbs);
         while ($result = $bloodrecords->fetch_assoc()) {
             if (!$earliestdate) {
                 $earliestdate = $result['effectivedate'];
             }
-            $statistics[$result['effectivedate']]['bloods'][] = $result;
+            $statistics[$result['effectivedate']]['bs'][] = $result;
+        }
+
+        $sqlbp = "SELECT recid, thedate, bptime, BP3avg, BP2avg,
+                DATE_SUB(thedate, INTERVAL 1 DAY) as effectivedate,
+                UNIX_TIMESTAMP(DATE_SUB(thedate, INTERVAL 1 DAY)) AS unixeffdate,
+                UNIX_TIMESTAMP(thedate) AS unixdate,
+                UNIX_TIMESTAMP(CONCAT(thedate, ' ', bptime)) AS bptimestamp
+                FROM bloodbp
+                WHERE (BP3avg > 0 AND BP2avg > 0)
+                ORDER BY thedate DESC, bptime ASC
+                LIMIT $lowerlimit, $higherlimit";
+
+        $bloodrecords = $this->mysqli->query($sqlbp);
+        while ($result = $bloodrecords->fetch_assoc()) {
+            $statistics[$result['effectivedate']]['bp'][] = $result;
         }
 
         $sqlalcohol = "SELECT *, UNIX_TIMESTAMP(thedate) AS unixdate
                     FROM alcohol
-                    WHERE thedate > DATE_SUB(DATE('$earliestdate'), INTERVAL 30 DAY)
-                    ORDER BY thedate DESC";
+                    ORDER BY thedate DESC
+                    LIMIT $lowerlimit, $higherlimit";
 
         //echo "<pre>$sqlalcohol</pre>";
 
@@ -94,9 +114,8 @@ class dbfunctions {
 
         $sqlmedication = "SELECT *, UNIX_TIMESTAMP(thedate) AS unixdate
                         FROM medication
-                        WHERE thedate > DATE_SUB(DATE('$earliestdate'), INTERVAL 30 DAY)
-                        ORDER BY thedate DESC, medication ASC";
-
+                        ORDER BY thedate DESC, medication ASC
+                        LIMIT $lowerlimit, $higherlimit";
 
         $medsrecords = $this->mysqli->query($sqlmedication);
         while ($result = $medsrecords->fetch_assoc()) {

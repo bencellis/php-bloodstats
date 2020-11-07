@@ -14,39 +14,28 @@ $statistics = get_blood_stats($page, $perpage, $filter);
  * $alcohol = true | false
  *
  */
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats">Lisinopril vs BP</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats-al">Lisinopril vs BP vs Alcohol</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3">Lisinopril vs BP (3 AVG)</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3-al">Lisinopril vs BP (3 AVG) vs Alcohol</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp2">Lisinopril vs BP (2 AVG)</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3-al">Lisinopril vs BP (2 AVG) vs Alcohol</a>
-$alcohol = false;
+// <a class="dropdown-item" href="#">Alcohol vs BP</a>
+// <a class="dropdown-item" href="#">Alcohol vs BS</a>
+// <div class="dropdown-divider"></div>
+// <a class="dropdown-item" href="#">Alcohol vs BP (3 Avg)</a>
+// <a class="dropdown-item" href="#">Alcohol vs BP (2 Avg)</a>
+$bsstats = false;
 $bpstats = null;
 switch($_REQUEST['scope']) {
+    case 'bsstats' :
+        $bsstats = true;
+        break;
     case 'bpstats' :
         $bpstats = true;
-        break;
-    case 'bsstats-al' :
-        $bpstats = true;
-        $alcohol = true;
         break;
     case 'bp3' :
         $bpstats = 'bp3';
         break;
-    case 'bp3-al' :
-        $bpstats = 'bp3';
-        $alcohol = true;
-        break;
     case 'bp2' :
         $bpstats = 'bp2';
-        break;
-    case 'bp2-al' :
-        $bpstats = 'bp2';
-        $alcohol = true;
-        break;
 }
-$activemedication = 'Lisinopril';
-$graphimage = get_stats_graph($statistics, 'medication', false, $bpstats, $activemedication, $alcohol);
+
+$graphimage = get_stats_graph($statistics, 'alcohol', $bsstats, $bpstats, null, true);
 
 ?>
     <div class="container-fluid">
@@ -78,13 +67,16 @@ $graphimage = get_stats_graph($statistics, 'medication', false, $bpstats, $activ
 			</div>
 			<div class="row">
 				<div class="col border border-secondary m-1">
-					<?php include('includes/medication_snippet.php'); ?>
-				</div>
-				<div class="col border border-secondary m-1">
 					<?php include('includes/alcohol_snippet.php'); ?>
 				</div>
-				<div class="col-7 border border-secondary m-1">
-					<?php include('includes/bp_snippet.php'); ?>
+				<div class="col border border-secondary m-1">
+					<?php
+    					if ($bsstats) {
+    					   include('includes/bs_snippet.php');
+    					} else {
+    					    include('includes/bp_snippet.php');
+    					}
+					?>
 				</div>
 			</div>
 		</div>
