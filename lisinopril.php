@@ -3,30 +3,17 @@ include_once ('includes/header.php');
 
 include_once ('includes/navigation.php');
 
-list($page, $perpage, $filter) = processPageParams();
+list($page, $pagedays) = processPageParams();
 
-$statistics = get_blood_stats($page, $perpage, $filter);
-/*
- * $primaryy = bsstats | bpstats | medication | alcohol
- * $bsstats = true | false
- * $bpstats = true | bp3 | bp2
- * $medication = true | $medicine
- * $alcohol = true | false
- *
- */
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats">Lisinopril vs BP</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bpstats-al">Lisinopril vs BP vs Alcohol</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3">Lisinopril vs BP (3 AVG)</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3-al">Lisinopril vs BP (3 AVG) vs Alcohol</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp2">Lisinopril vs BP (2 AVG)</a>
-// <a class="dropdown-item" href="/bloodstats/lisinopril.php?scope=bp3-al">Lisinopril vs BP (2 AVG) vs Alcohol</a>
+$statistics = get_blood_stats($page, $pagedays);
+
 $alcohol = false;
 $bpstats = null;
 switch($_REQUEST['scope']) {
     case 'bpstats' :
         $bpstats = true;
         break;
-    case 'bsstats-al' :
+    case 'bpstats-al' :
         $bpstats = true;
         $alcohol = true;
         break;
@@ -49,6 +36,13 @@ $activemedication = 'Lisinopril';
 $graphimage = get_stats_graph($statistics, 'medication', false, $bpstats, $activemedication, $alcohol);
 
 ?>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+        	<h1>Statistics Graph</h1>
+        </div>
+      </div>
+    </div>
     <div class="container-fluid">
       <div class="row">
         <div class="col-12 text-center">
@@ -57,11 +51,14 @@ $graphimage = get_stats_graph($statistics, 'medication', false, $bpstats, $activ
       </div>
     </div>
     <div class="container">
+      <?php include_once 'includes/filter_snippet.php';?>
       <div class="row">
         <div class="col-12">
-        	<h1>Blood Statistics</h1>
+        	<h2>Source Statistics</h2>
         </div>
       </div>
+
+
 <?php foreach ($statistics as $date => $stats): ?>
 	<?php
 	if (empty($stats['medication'])) {
@@ -90,8 +87,8 @@ $graphimage = get_stats_graph($statistics, 'medication', false, $bpstats, $activ
 		</div>
 	</div>
 <?php endforeach; ?>
+	<?php include_once('includes/pagingbar_snippet.php'); ?>
     </div> <!-- /container -->
-
     <hr>
 
 <?php include_once('includes/footer.php'); ?>

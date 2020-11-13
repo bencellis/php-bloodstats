@@ -3,22 +3,10 @@ include_once ('includes/header.php');
 
 include_once ('includes/navigation.php');
 
-list($page, $perpage, $filter) = processPageParams();
+list($page, $pagedays) = processPageParams();
 
-$statistics = get_blood_stats($page, $perpage, $filter);
-/*
- * $primaryy = bsstats | bpstats | medication | alcohol
- * $bsstats = true | false
- * $bpstats = true | bp3 | bp2
- * $medication = true | $medicine
- * $alcohol = true | false
- *
- */
-// <a class="dropdown-item" href="#">Alcohol vs BP</a>
-// <a class="dropdown-item" href="#">Alcohol vs BS</a>
-// <div class="dropdown-divider"></div>
-// <a class="dropdown-item" href="#">Alcohol vs BP (3 Avg)</a>
-// <a class="dropdown-item" href="#">Alcohol vs BP (2 Avg)</a>
+$statistics = get_blood_stats($page, $pagedays);
+
 $bsstats = false;
 $bpstats = null;
 switch($_REQUEST['scope']) {
@@ -38,6 +26,13 @@ switch($_REQUEST['scope']) {
 $graphimage = get_stats_graph($statistics, 'alcohol', $bsstats, $bpstats, null, true);
 
 ?>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+        	<h1>Statistics Graph</h1>
+        </div>
+      </div>
+    </div>
     <div class="container-fluid">
       <div class="row">
         <div class="col-12 text-center">
@@ -46,9 +41,10 @@ $graphimage = get_stats_graph($statistics, 'alcohol', $bsstats, $bpstats, null, 
       </div>
     </div>
     <div class="container">
+        <?php include_once 'includes/filter_snippet.php';?>
       <div class="row">
         <div class="col-12">
-        	<h1>Blood Statistics</h1>
+        	<h2>Source Statistics</h2>
         </div>
       </div>
 <?php foreach ($statistics as $date => $stats): ?>
@@ -82,6 +78,7 @@ $graphimage = get_stats_graph($statistics, 'alcohol', $bsstats, $bpstats, null, 
 		</div>
 	</div>
 <?php endforeach; ?>
+	<?php include_once('includes/pagingbar_snippet.php'); ?>
     </div> <!-- /container -->
 
     <hr>

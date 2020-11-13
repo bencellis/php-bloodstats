@@ -57,51 +57,50 @@ class dbfunctions {
 
     }
 
-    public function get_blood_stats($page = 1, $perpage = 42, $filter = null) {
-
-        $earliestdate = 0;
+    public function get_blood_stats($page = 1, $pagedays = 90, $order = 'ASC') {
 
         $statistics = array();
-        $lowerlimit = $page - 1;
-        $higherlimit = $page * $perpage;
+        $lowerlimit = ($page - 1) * $pagedays;
+        $higherlimit = $pagedays;
 
-        $sqlbs = "SELECT recid, thedate, bstime, bsreading,
-                DATE_SUB(thedate, INTERVAL 1 DAY) as effectivedate,
-                UNIX_TIMESTAMP(DATE_SUB(thedate, INTERVAL 1 DAY)) AS unixeffdate,
-                UNIX_TIMESTAMP(thedate) AS unixdate,
-                UNIX_TIMESTAMP(CONCAT(thedate, ' ', bstime)) AS bstimestamp
-                FROM bloodbs
-                WHERE bsreading > 0
-                ORDER BY thedate DESC, bstime ASC
-                LIMIT $lowerlimit, $higherlimit";
+        $datelimitsql = "JOIN (SELECT DISTINCT thedate FROM bloodbs ORDER BY thedate DESC LIMIT $lowerlimit, $higherlimit) B On B.thedate = A.thedate";
+
+        $sqlbs = "SELECT recid, A.thedate, bstime, bsreading,
+                    DATE_SUB(A.thedate, INTERVAL 1 DAY) as effectivedate,
+                    UNIX_TIMESTAMP(DATE_SUB(A.thedate, INTERVAL 1 DAY)) AS unixeffdate,
+                    UNIX_TIMESTAMP(A.thedate) AS unixdate,
+                    UNIX_TIMESTAMP(CONCAT(A.thedate, ' ', bstime)) AS bstimestamp
+                    FROM bloodbs A
+                    $datelimitsql
+                    WHERE bsreading > 0
+                    ORDER BY thedate $order, bstime ASC";
+
+//         die("<pre>$sqlbs</pre>");
 
         $bloodrecords = $this->mysqli->query($sqlbs);
         while ($result = $bloodrecords->fetch_assoc()) {
-            if (!$earliestdate) {
-                $earliestdate = $result['effectivedate'];
-            }
             $statistics[$result['effectivedate']]['bs'][] = $result;
         }
 
-        $sqlbp = "SELECT recid, thedate, bptime, BP3avg, BP2avg,
-                DATE_SUB(thedate, INTERVAL 1 DAY) as effectivedate,
-                UNIX_TIMESTAMP(DATE_SUB(thedate, INTERVAL 1 DAY)) AS unixeffdate,
-                UNIX_TIMESTAMP(thedate) AS unixdate,
-                UNIX_TIMESTAMP(CONCAT(thedate, ' ', bptime)) AS bptimestamp
-                FROM bloodbp
-                WHERE (BP3avg > 0 AND BP2avg > 0)
-                ORDER BY thedate DESC, bptime ASC
-                LIMIT $lowerlimit, $higherlimit";
+        $sqlbp = "SELECT recid, A.thedate, bptime, BP3avg, BP2avg,
+                    DATE_SUB(A.thedate, INTERVAL 1 DAY) as effectivedate,
+                    UNIX_TIMESTAMP(DATE_SUB(A.thedate, INTERVAL 1 DAY)) AS unixeffdate,
+                    UNIX_TIMESTAMP(A.thedate) AS unixdate,
+                    UNIX_TIMESTAMP(CONCAT(A.thedate, ' ', bptime)) AS bptimestamp
+                    FROM bloodbp A
+                    $datelimitsql
+                    WHERE (A.BP3avg > 0 AND A.BP2avg > 0)
+                    ORDER BY A.thedate $order, A.bptime ASC";
 
         $bloodrecords = $this->mysqli->query($sqlbp);
         while ($result = $bloodrecords->fetch_assoc()) {
             $statistics[$result['effectivedate']]['bp'][] = $result;
         }
 
-        $sqlalcohol = "SELECT *, UNIX_TIMESTAMP(thedate) AS unixdate
-                    FROM alcohol
-                    ORDER BY thedate DESC
-                    LIMIT $lowerlimit, $higherlimit";
+        $sqlalcohol = "SELECT A.*, UNIX_TIMESTAMP(A.thedate) AS unixdate
+                        FROM alcohol A
+                        $datelimitsql
+                        ORDER BY A.thedate $order";
 
         //echo "<pre>$sqlalcohol</pre>";
 
@@ -112,10 +111,10 @@ class dbfunctions {
             }
         }
 
-        $sqlmedication = "SELECT *, UNIX_TIMESTAMP(thedate) AS unixdate
-                        FROM medication
-                        ORDER BY thedate DESC, medication ASC
-                        LIMIT $lowerlimit, $higherlimit";
+        $sqlmedication = "SELECT A.*, UNIX_TIMESTAMP(A.thedate) AS unixdate
+                            FROM medication A
+                            $datelimitsql
+                            ORDER BY A.thedate $order, A.medication ASC";
 
         $medsrecords = $this->mysqli->query($sqlmedication);
         while ($result = $medsrecords->fetch_assoc()) {

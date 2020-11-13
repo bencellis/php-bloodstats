@@ -17,19 +17,21 @@
 									<b>BP 2 Avg</b>
 								</div>
 							</div>
-							<?php foreach ($stats['bp'] as $bloodstats): ?>
-								<div class="row">
-									<!--  thedate bstime bs bptime BP3avg BP2avg -->
-									<div class="col-3">
-										<?php echo $bloodstats['bptime']; ?>
-									</div>
-									<div class="col">
-										<?php echo $bloodstats['BP3avg']; ?>
-									</div>
-									<div class="col">
-										<?php echo $bloodstats['BP2avg']; ?>
-									</div>
-								</div>
-							<?php endforeach; ?>
+							<?php if (!empty($stats['bp'])): ?>
+    							<?php foreach ($stats['bp'] as $bloodstats): ?>
+    								<div class="row">
+    									<!--  thedate bstime bs bptime BP3avg BP2avg -->
+    									<div class="col-3">
+    										<?php echo $bloodstats['bptime']; ?>
+    									</div>
+    									<div class="col">
+    										<?php echo $bloodstats['BP3avg']; ?>
+    									</div>
+    									<div class="col">
+    										<?php echo $bloodstats['BP2avg']; ?>
+    									</div>
+    								</div>
+    							<?php endforeach; ?>
+							<?php endif; ?>
 						</div>
 					</div>

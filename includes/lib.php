@@ -30,14 +30,13 @@ function testdbconnection() {
 
 function processPageParams() {
     $page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 1;
-    $perpage= isset($_REQUEST['perpage']) ? $_REQUEST['perpage'] : 42;
-    $filter = isset($_REQUEST['accountid']) ? $_REQUEST['accountid'] : null;
-    return array($page, $perpage, $filter);
+    $pagedays= isset($_REQUEST['pagedays']) ? $_REQUEST['pagedays'] : 90;
+    return array($page, $pagedays);
 }
 
-function get_blood_stats($page = 1, $perpage = 42, $filter = null) {
+function get_blood_stats($page = 1, $pagedays = 90) {
     global $db;
-    return $db->get_blood_stats($page, $perpage, $filter);
+    return $db->get_blood_stats($page, $pagedays);
 }
 
 function reprocess_input() {
@@ -658,50 +657,52 @@ function get_yaxis($statistics, $primaryy, $bsstats = false, $bpstats = null, $m
 
         if ($bpstats) {
             $earliest = 0;
-            foreach ($stats['bp'] as $bloodstats) {
+            if (!empty($stats['bp'])) {
+                foreach ($stats['bp'] as $bloodstats) {
 
-                // Check for no stats at all
-                if (!$bloodstats['BP3avg'] && !$bloodstats['BP2avg']) {
-                    continue;
-                }
-
-                if ($bpstats === true || $bpstats == 'bp3') {
-                    if (!isset($ys['BP3Avg'])) {
-                        $ys['BP3Avg'] = array();
+                    // Check for no stats at all
+                    if (!$bloodstats['BP3avg'] && !$bloodstats['BP2avg']) {
+                        continue;
                     }
-                }
 
-                if ($bpstats === true || $bpstats == 'bp2') {
-                    if (!isset($ys['BP2Avg'])) {
-                        $ys['BP2Avg'] = array();
-                    }
-                }
-
-                if ($returnall) {
                     if ($bpstats === true || $bpstats == 'bp3') {
-                        $ys['BP3Avg'][(int)$bloodstats['bptimestamp']] = get_mean_arterial_pressure($bloodstats['BP3avg']);
+                        if (!isset($ys['BP3Avg'])) {
+                            $ys['BP3Avg'] = array();
+                        }
                     }
+
                     if ($bpstats === true || $bpstats == 'bp2') {
-                        $ys['BP2Avg'][(int)$bloodstats['bptimestamp']] = get_mean_arterial_pressure($bloodstats['BP2avg']);
+                        if (!isset($ys['BP2Avg'])) {
+                            $ys['BP2Avg'] = array();
+                        }
                     }
-                } else {
-                    // Only really want the morning level.
-                    if (!$earliest || $bloodstats['bptimestamp'] < $earliest) {
-                        $earliest = $bloodstats['bptimestamp'];
+
+                    if ($returnall) {
                         if ($bpstats === true || $bpstats == 'bp3') {
-                            $bp3map = get_mean_arterial_pressure($bloodstats['BP3avg']);
-                            if ($useeffectivedate) {
-                                $ys['BP3Avg'][$bloodstats['unixeffdate']] = $bp3map;
-                            } else {
-                                $ys['BP3Avg'][$bloodstats['unixdate']] = $bp3map;
-                            }
+                            $ys['BP3Avg'][(int)$bloodstats['bptimestamp']] = get_mean_arterial_pressure($bloodstats['BP3avg']);
                         }
                         if ($bpstats === true || $bpstats == 'bp2') {
-                            $bp2map = get_mean_arterial_pressure($bloodstats['BP2avg']);
-                            if ($useeffectivedate) {
-                                $ys['BP2Avg'][$bloodstats['unixeffdate']] = $bp2map;
-                            } else {
-                                $ys['BP2Avg'][$bloodstats['unixdate']] = $bp2map;
+                            $ys['BP2Avg'][(int)$bloodstats['bptimestamp']] = get_mean_arterial_pressure($bloodstats['BP2avg']);
+                        }
+                    } else {
+                        // Only really want the morning level.
+                        if (!$earliest || $bloodstats['bptimestamp'] < $earliest) {
+                            $earliest = $bloodstats['bptimestamp'];
+                            if ($bpstats === true || $bpstats == 'bp3') {
+                                $bp3map = get_mean_arterial_pressure($bloodstats['BP3avg']);
+                                if ($useeffectivedate) {
+                                    $ys['BP3Avg'][$bloodstats['unixeffdate']] = $bp3map;
+                                } else {
+                                    $ys['BP3Avg'][$bloodstats['unixdate']] = $bp3map;
+                                }
+                            }
+                            if ($bpstats === true || $bpstats == 'bp2') {
+                                $bp2map = get_mean_arterial_pressure($bloodstats['BP2avg']);
+                                if ($useeffectivedate) {
+                                    $ys['BP2Avg'][$bloodstats['unixeffdate']] = $bp2map;
+                                } else {
+                                    $ys['BP2Avg'][$bloodstats['unixdate']] = $bp2map;
+                                }
                             }
                         }
                     }
@@ -836,6 +837,33 @@ function get_graph_title($primaryy, $bsstats = false, $bpstats = null, $medicati
     return $title;
 }
 
+function getYScaleValues($ydata) {
+
+    $values = array_unique(array_values($ydata));
+    sort($values, SORT_NUMERIC);
+    // die('<pre>' . print_r($values, true) . '</pre>');
+
+    if (count($values) > 1) {
+        $min = floor(array_shift($values));
+        if ($min > 0) {
+            $min--;
+        }
+        $max = ceil(array_pop($values)) + 1;
+        if ($max == 1) {
+            $max++;
+        }
+    } else {
+        if ($values[0] > 0) {
+            $min = $values[0] - 1;
+        } else {
+            $min = 0;
+        }
+        $max = $values[0] + 1;
+    }
+
+    return array($min, $max);
+}
+
 /*
  * $primaryy = bsstats | bpstats | medication | alcohol
  * $bsstats = true | false
@@ -848,7 +876,7 @@ function get_stats_graph($statistics, $primaryy, $bsstats = false, $bpstats = nu
 
     // Size of the overall graphforeach ($stats['bloods'] as $bloodstats)
     $width=1200;
-    $height=750;
+    $height=600;
 
     $linecolours = array(
         'red',
@@ -872,13 +900,30 @@ function get_stats_graph($statistics, $primaryy, $bsstats = false, $bpstats = nu
         MARK_FLASH
     );
 
+    $ys = get_yaxis($statistics, $primaryy, $bsstats, $bpstats, $medication, $alcohol, $returnall, $useeffectivedate);
+    $primy = get_graph_primarykey($primaryy, $bsstats, $bpstats, $medication, $alcohol);
+
     // Create the graph and set a scale.
     // These two calls are always required
     $graph = new Graph($width, $height);
-    $graph->SetScale('datlin');
+    if ($primaryy == 'medication') {
+        list($aYMin, $aYMax) = getYScaleValues($ys[$primy]);
+        $graph->SetScale('datlin', $aYMin, $aYMax);
+        $graph->SetTickDensity(TICKD_VERYSPARSE);
+        //$graph->yaxis->scale->ticks->Set(20,10);
+        //$graph->yaxis->scale->ticks->setColor();
+
+    } else {
+        $graph->SetScale('datlin');
+    }
+
+    $graph->xaxis->scale->SetDateFormat('d-M-Y');
+
+//     echo "<p>Min $aYMin Max $aYMax</p>";
+//     die;
 
     $graph->legend->SetPos(0.5, 0.98, 'center', 'bottom');
-    $graph->xaxis->scale->SetDateFormat('d-M-Y');
+
     // Slightly larger than normal margins at the bottom to have room for
     // the x-axis date labels and the legend
     $graph->SetMargin(40, 150, 30, 200);
@@ -886,10 +931,6 @@ function get_stats_graph($statistics, $primaryy, $bsstats = false, $bpstats = nu
     $graph->xaxis->SetLabelAngle(30);
     $graph->xaxis->title->Set('Date');
     $graph->xaxis->title->SetFont(FF_DEFAULT, FS_BOLDITALIC, 10);
-
-    $ys = get_yaxis($statistics, $primaryy, $bsstats, $bpstats, $medication, $alcohol, $returnall, $useeffectivedate);
-    $primy = get_graph_primarykey($primaryy, $bsstats, $bpstats, $medication, $alcohol);
-
     $graph->title->Set(get_graph_title($primaryy, $bsstats, $bpstats, $medication, $alcohol));
     $graph->subtitle->Set('(For Benjamin Ellis)');
     $graph->title->SetFont(FF_DEFAULT, FS_BOLD, 14);
@@ -898,7 +939,10 @@ function get_stats_graph($statistics, $primaryy, $bsstats = false, $bpstats = nu
     $xdata = array_keys($ys[$primy]);
     if (count($xdata) > 60) {
         $graph->xaxis->SetLabelAngle(90);
+    } else {
+        $graph->xaxis->SetLabelAngle(30);
     }
+
     list($tickPositions, $minTickPositions) = DateScaleUtils::GetTicks($xdata, DSUTILS_DAY1);
     $graph->xaxis->SetTickPositions($tickPositions,$minTickPositions);
 
@@ -911,6 +955,9 @@ function get_stats_graph($statistics, $primaryy, $bsstats = false, $bpstats = nu
     $line->legend = $primy;
     $line->mark->SetType(array_shift($plotmaps));
     $line->mark->SetFillColor($linecolour);
+
+
+    //$graph->yscale = new LinearScale((int) $aYMin, (int) $aYMax);
     $graph->Add($line);
     unset($ys[$primy]);
 
@@ -926,13 +973,13 @@ function get_stats_graph($statistics, $primaryy, $bsstats = false, $bpstats = nu
         $line->legend = $legend;
         $line->mark->SetType(array_shift($plotmaps));
         $line->mark->SetFillColor($linecolour);
-        //die('<pre>' . print_r($line, true) . '</pre>');
         $graph->SetYScale($lines, 'lin');
         $graph->AddY($lines, $line);
         $graph->ynaxis[$lines]->SetColor($line->color);
         $lines++;
     }
 
+    //die;
     // Display the graph
     $tempfilename = 'graphs/' . uniqid() . '.png';
     $graph->Stroke($tempfilename);
@@ -940,3 +987,31 @@ function get_stats_graph($statistics, $primaryy, $bsstats = false, $bpstats = nu
     return $tempfilename;
 
 }
+
+function getSimplePagingHTML($page, $pagedays, $recsinpage) {
+    $scope = empty($_REQUEST['scope']) ? '' : $_REQUEST['scope'];
+
+    $pagingbar = "Processed $recsinpage Days<br />";
+    $paginglink = parse_url($_SERVER['REQUEST_URI'],  PHP_URL_PATH);
+
+    //if ($recsinpage >= $pagedays) {
+        if ($page > 1) {        // we need a previous link
+            if ($page > 2) {    // We need a 1st link
+                $link = $paginglink . '?' .  http_build_query(array('page' => 1, 'pagedays' => $pagedays, 'scope' => $scope));
+                $pagingbar .= '<span>| <a href="' . $link . '">&laquo; First</a> |</span>';
+            }
+            $prvpage = $page - 1;
+            $link = $paginglink . '?' .  http_build_query(array('page' => $prvpage, 'pagedays' => $pagedays, 'scope' => $scope));
+            $pagingbar .= '<span>| <a href="'. $link . '">&lsaquo; Previous</a> |</span>';
+        }
+
+        //if ($recsinpage == $pagedays) { // we have a full page - so next is required
+            $nxtpage = $page + 1;
+            $link = $paginglink . '?' .  http_build_query(array('page' => $nxtpage, 'pagedays' => $pagedays, 'scope' => $scope));
+            $pagingbar .= '<span>| <a href="'. $link . '">Next &rsaquo;</a> |</span>';
+        //}
+    //}
+
+    return $pagingbar;
+}
+

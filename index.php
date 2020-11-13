@@ -7,9 +7,9 @@ if (!empty($_REQUEST['reprocess'])) {
     reprocess_input();
 }
 
-list($page, $perpage, $filter) = processPageParams();
+list($page, $pagedays) = processPageParams();
 
-$statistics = get_blood_stats($page, $perpage, $filter);
+$statistics = get_blood_stats($page, $pagedays, 'DESC');
 
 ?>
 
@@ -46,6 +46,7 @@ $statistics = get_blood_stats($page, $perpage, $filter);
     		</div>
     	</div>
 <?php endforeach; ?>
+	<?php include_once('includes/pagingbar_snippet.php'); ?>
     </div> <!-- /container -->
 
     <hr>
