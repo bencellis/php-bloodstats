@@ -22,6 +22,11 @@ switch($_REQUEST['scope']) {
 $activemedication = 'Metamorfin';
 $graphimage = get_stats_graph($statistics, 'medication', $bsstats, false, $activemedication, $alcohol);
 
+// switch stats order
+$statistics = array_reverse($statistics, true);
+
+// die('<pre>' . print_r($statistics, true) . '</pre>');
+
 ?>
     <div class="container">
       <div class="row">
@@ -66,7 +71,7 @@ $graphimage = get_stats_graph($statistics, 'medication', $bsstats, false, $activ
 					<?php include('includes/alcohol_snippet.php'); ?>
 				</div>
 				<div class="col-7 border border-secondary m-1">
-					<?php include('includes/bp_snippet.php'); ?>
+					<?php include('includes/bs_snippet.php'); ?>
 				</div>
 			</div>
 		</div>

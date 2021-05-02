@@ -35,6 +35,9 @@ switch($_REQUEST['scope']) {
 $activemedication = 'Lisinopril';
 $graphimage = get_stats_graph($statistics, 'medication', false, $bpstats, $activemedication, $alcohol);
 
+// switch stats order
+$statistics = array_reverse($statistics, true);
+
 ?>
     <div class="container">
       <div class="row">

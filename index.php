@@ -10,6 +10,8 @@ if (!empty($_REQUEST['reprocess'])) {
 list($page, $pagedays) = processPageParams();
 
 $statistics = get_blood_stats($page, $pagedays, 'DESC');
+// switch stats order
+$statistics = array_reverse($statistics, true);
 
 ?>
 

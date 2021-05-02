@@ -121,6 +121,7 @@ function reprocess_input() {
                                 } catch (PhpOffice\PhpSpreadsheet\Calculation\Exception $e) {
                                     $val = 0;
                                 }
+
                                 if (!$val) {
                                     $divisor = 0;
                                     $s = 0;
@@ -220,16 +221,23 @@ function reprocess_input() {
                                     }
                                 } else {
                                     $val = $cell->getValue();
-                                    if (!$val) {
-                                        $val = 0;
+                                    // Fix potential problems.
+                                    if ($val == '') {
+                                        $val = null;
+                                    } else if (substr($val, 0, 1) == '?') {
+                                        $val = null;
+                                    } else if (substr($val, 0, 1) == '~') {
+                                        $val = intval(str_replace('~', '', $val));
                                     }
-                                    if (in_array($col, $bsflds)) {
-                                        $sqlbs .= $fields[$col] . " = '$val'";
-                                        $bschg = true;
-                                    }
-                                    if (in_array($col, $bpflds)) {
-                                        $sqlbp .= $fields[$col] . " = '$val'";
-                                        $bpchg = true;
+                                    if ($val !== null) {
+                                        if (in_array($col, $bsflds)) {
+                                            $sqlbs .= $fields[$col] . " = '$val'";
+                                            $bschg = true;
+                                        }
+                                        if (in_array($col, $bpflds)) {
+                                            $sqlbp .= $fields[$col] . " = '$val'";
+                                            $bpchg = true;
+                                        }
                                     }
                                 }
                             }
@@ -280,6 +288,8 @@ function reprocess_input() {
                                 } catch (PhpOffice\PhpSpreadsheet\Calculation\Exception $e) {
                                     $val = 0;
                                 }
+
+
                                 if (!$val) {
                                     $divisor = 0;
                                     $s = 0;
@@ -381,16 +391,19 @@ function reprocess_input() {
                                                             $sql .= $fields[$col] . " = FROM_UNIXTIME($lastdate)";
                                                         } else if ($sheetname == 'Alcohol') {
                                                             $val = $cell->getValue();
-                                                            if ((strpos($val, '~') !== false)) {
-                                                                $val = intval(str_replace('~', '', $val));
-                                                                $sql.= "estimate = 1,\n";
-                                                            } else if ((strpos($val, '?') !== false)) {
+                                                            // Fix potential problems.
+                                                            if ($val == '') {
+                                                                $val = null;
+                                                            } else if (substr($val, 0, 1) == '?') {
                                                                 $val = 0;
                                                                 $sql .= "unknown = 1,\n";
+                                                            } else if (substr($val, 0, 1) == '~') {
+                                                                $val = intval(str_replace('~', '', $val));
+                                                                $sql.= "estimate = 1,\n";
                                                             }
-
-                                                            $sql .= $fields[$col] . " = '$val'";
-
+                                                            if ($val !== null) {
+                                                                $sql .= $fields[$col] . " = '$val'";
+                                                            }
                                                         } else {
                                                             $val = $cell->getValue();
                                                             if (!$val) {
@@ -451,6 +464,8 @@ function reprocess_input() {
                                     } else if ((strpos($val, '?') !== false)) {
                                         $val = 0;
                                         $sql .= "unknown = 1,\n";
+                                    } else if ($val == '') {
+                                        $val = 0;
                                     }
 
                                     $sql .= $fields[$col] . " = '$val'";
@@ -502,25 +517,49 @@ function reprocess_input() {
                             $sql1 .= "thedate = FROM_UNIXTIME($val),\n";
                             $sql2 .= "thedate = FROM_UNIXTIME($val),\n";
                         }
+                        /*
+                         *
+                         Day
+                         Date
+                         Lisinopril
+                         AM
+                         PM
 
+                         Metamorfin
+                         AM
+                         PM
+
+                         Curalin
+                         AM
+                         Mid
+                         PM
+                         */
                         if (!$val = $cell->getValue()) {
                             $val = 0;
                         }
 
-                        if ($col == 3) {
-                            $sql1 .= "medication = 'Lisinopril',\n";
-                            $sql1 .= "AM = $val\n";
-                        }
-
-                        if ($col == 6) {
-                            $sql2 .= "medication = 'Metamorfin',\n";
-                            $sql2 .= "AM = $val,\n";
-                        }
-
-                        if ($col == 7) {
-                            $sql2 .= "PM = $val\n";
+                        switch ($col) {
+                            case 3:
+                                $sql1 .= "medication = 'Lisinopril',\n";
+                                break;
+                            case 4:
+                                $sql1 .= "AM = $val,\n";
+                                break;
+                            case 5:
+                                $sql1 .= "PM = $val\n";
+                                break;
+                            case 7:
+                                $sql2 .= "medication = 'Metamorfin',\n";
+                                break;
+                            case 8:
+                                $sql2 .= "AM = $val,\n";
+                                break;
+                            case 9:
+                                $sql2 .= "PM = $val\n";
+                                break;
                         }
                     }
+
                     $db->mysqli->query($sql1);
                     if ($db->mysqli->error) {
                         echo "<pre>$sql1\n</pre>";
@@ -1013,5 +1052,17 @@ function getSimplePagingHTML($page, $pagedays, $recsinpage) {
     //}
 
     return $pagingbar;
+}
+
+function fix_value($val) {
+    // Fix potential problems.
+    if (!$val) {
+        $val = 0;
+    } else if (substr($val, 0, 1) == '?') {
+        $val = null;
+    } else if (substr($val, 0, 1) == '~') {
+        $val = substr($val, 1);
+    }
+    return $val;
 }
 

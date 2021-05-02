@@ -24,6 +24,8 @@ switch($_REQUEST['scope']) {
 }
 
 $graphimage = get_stats_graph($statistics, 'alcohol', $bsstats, $bpstats, null, true);
+// switch stats order
+$statistics = array_reverse($statistics, true);
 
 ?>
     <div class="container">
